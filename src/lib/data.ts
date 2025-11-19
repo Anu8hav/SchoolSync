@@ -915,149 +915,160 @@ export const announcementsData = [
   },
 ];
 
-
 // YOU SHOULD CHANGE THE DATES OF THE EVENTS TO THE CURRENT DATE TO SEE THE EVENTS ON THE CALENDAR
+// === CALENDAR EVENTS ===
+// Auto-adjusted to current week so events are always visible
+const today = new Date();
+const year = today.getFullYear();
+const month = today.getMonth();
+const startDay = today.getDate(); // use this week as base
+
 export const calendarEvents = [
+  // Day 1
   {
     title: "Math",
     allDay: false,
-    start: new Date(2024, 7, 12, 8, 0),
-    end: new Date(2024, 7, 12, 8, 45),
+    start: new Date(year, month, startDay, 8, 0),
+    end: new Date(year, month, startDay, 8, 45),
   },
   {
     title: "English",
     allDay: false,
-    start: new Date(2024, 7, 12, 9, 0),
-    end: new Date(2024, 7, 12, 9, 45),
+    start: new Date(year, month, startDay, 9, 0),
+    end: new Date(year, month, startDay, 9, 45),
   },
   {
     title: "Biology",
     allDay: false,
-    start: new Date(2024, 7, 12, 10, 0),
-    end: new Date(2024, 7, 12, 10, 45),
+    start: new Date(year, month, startDay, 10, 0),
+    end: new Date(year, month, startDay, 10, 45),
   },
   {
     title: "Physics",
     allDay: false,
-    start: new Date(2024, 7, 12, 11, 0),
-    end: new Date(2024, 7, 12, 11, 45),
+    start: new Date(year, month, startDay, 11, 0),
+    end: new Date(year, month, startDay, 11, 45),
   },
   {
     title: "Chemistry",
     allDay: false,
-    start: new Date(2024, 7, 12, 13, 0),
-    end: new Date(2024, 7, 12, 13, 45),
+    start: new Date(year, month, startDay, 13, 0),
+    end: new Date(year, month, startDay, 13, 45),
   },
   {
     title: "History",
     allDay: false,
-    start: new Date(2024, 7, 12, 14, 0),
-    end: new Date(2024, 7, 12, 14, 45),
+    start: new Date(year, month, startDay, 14, 0),
+    end: new Date(year, month, startDay, 14, 45),
   },
+
+  // Day 2
   {
     title: "English",
     allDay: false,
-    start: new Date(2024, 7, 13, 9, 0),
-    end: new Date(2024, 7, 13, 9, 45),
+    start: new Date(year, month, startDay + 1, 9, 0),
+    end: new Date(year, month, startDay + 1, 9, 45),
   },
   {
     title: "Biology",
     allDay: false,
-    start: new Date(2024, 7, 13, 10, 0),
-    end: new Date(2024, 7, 13, 10, 45),
+    start: new Date(year, month, startDay + 1, 10, 0),
+    end: new Date(year, month, startDay + 1, 10, 45),
   },
   {
     title: "Physics",
     allDay: false,
-    start: new Date(2024, 7, 13, 11, 0),
-    end: new Date(2024, 7, 13, 11, 45),
+    start: new Date(year, month, startDay + 1, 11, 0),
+    end: new Date(year, month, startDay + 1, 11, 45),
   },
-
   {
     title: "History",
     allDay: false,
-    start: new Date(2024, 7, 13, 14, 0),
-    end: new Date(2024, 7, 13, 14, 45),
+    start: new Date(year, month, startDay + 1, 14, 0),
+    end: new Date(year, month, startDay + 1, 14, 45),
   },
+
+  // Day 3
   {
     title: "Math",
     allDay: false,
-    start: new Date(2024, 7, 14, 8, 0),
-    end: new Date(2024, 7, 14, 8, 45),
+    start: new Date(year, month, startDay + 2, 8, 0),
+    end: new Date(year, month, startDay + 2, 8, 45),
   },
   {
     title: "Biology",
     allDay: false,
-    start: new Date(2024, 7, 14, 10, 0),
-    end: new Date(2024, 7, 14, 10, 45),
-  },
-
-  {
-    title: "Chemistry",
-    allDay: false,
-    start: new Date(2024, 7, 14, 13, 0),
-    end: new Date(2024, 7, 14, 13, 45),
-  },
-  {
-    title: "History",
-    allDay: false,
-    start: new Date(2024, 7, 14, 14, 0),
-    end: new Date(2024, 7, 13, 14, 45),
-  },
-  {
-    title: "English",
-    allDay: false,
-    start: new Date(2024, 7, 15, 9, 0),
-    end: new Date(2024, 7, 15, 9, 45),
-  },
-  {
-    title: "Biology",
-    allDay: false,
-    start: new Date(2024, 7, 15, 10, 0),
-    end: new Date(2024, 7, 15, 10, 45),
-  },
-  {
-    title: "Physics",
-    allDay: false,
-    start: new Date(2024, 7, 15, 11, 0),
-    end: new Date(2024, 7, 15, 11, 45),
-  },
-
-  {
-    title: "History",
-    allDay: false,
-    start: new Date(2024, 7, 15, 14, 0),
-    end: new Date(2024, 7, 15, 14, 45),
-  },
-  {
-    title: "Math",
-    allDay: false,
-    start: new Date(2024, 7, 16, 8, 0),
-    end: new Date(2024, 7, 16, 8, 45),
-  },
-  {
-    title: "English",
-    allDay: false,
-    start: new Date(2024, 7, 16, 9, 0),
-    end: new Date(2024, 7, 16, 9, 45),
-  },
-
-  {
-    title: "Physics",
-    allDay: false,
-    start: new Date(2024, 7, 16, 11, 0),
-    end: new Date(2024, 7, 16, 11, 45),
+    start: new Date(year, month, startDay + 2, 10, 0),
+    end: new Date(year, month, startDay + 2, 10, 45),
   },
   {
     title: "Chemistry",
     allDay: false,
-    start: new Date(2024, 7, 16, 13, 0),
-    end: new Date(2024, 7, 16, 13, 45),
+    start: new Date(year, month, startDay + 2, 13, 0),
+    end: new Date(year, month, startDay + 2, 13, 45),
   },
   {
     title: "History",
     allDay: false,
-    start: new Date(2024, 7, 16, 14, 0),
-    end: new Date(2024, 7, 16, 14, 45),
+    start: new Date(year, month, startDay + 2, 14, 0),
+    end: new Date(year, month, startDay + 2, 14, 45),
+  },
+
+  // Day 4
+  {
+    title: "English",
+    allDay: false,
+    start: new Date(year, month, startDay + 3, 9, 0),
+    end: new Date(year, month, startDay + 3, 9, 45),
+  },
+  {
+    title: "Biology",
+    allDay: false,
+    start: new Date(year, month, startDay + 3, 10, 0),
+    end: new Date(year, month, startDay + 3, 10, 45),
+  },
+  {
+    title: "Physics",
+    allDay: false,
+    start: new Date(year, month, startDay + 3, 11, 0),
+    end: new Date(year, month, startDay + 3, 11, 45),
+  },
+  {
+    title: "History",
+    allDay: false,
+    start: new Date(year, month, startDay + 3, 14, 0),
+    end: new Date(year, month, startDay + 3, 14, 45),
+  },
+
+  // Day 5
+  {
+    title: "Math",
+    allDay: false,
+    start: new Date(year, month, startDay + 4, 8, 0),
+    end: new Date(year, month, startDay + 4, 8, 45),
+  },
+  {
+    title: "English",
+    allDay: false,
+    start: new Date(year, month, startDay + 4, 9, 0),
+    end: new Date(year, month, startDay + 4, 9, 45),
+  },
+  {
+    title: "Physics",
+    allDay: false,
+    start: new Date(year, month, startDay + 4, 11, 0),
+    end: new Date(year, month, startDay + 4, 11, 45),
+  },
+  {
+    title: "Chemistry",
+    allDay: false,
+    start: new Date(year, month, startDay + 4, 13, 0),
+    end: new Date(year, month, startDay + 4, 13, 45),
+  },
+  {
+    title: "History",
+    allDay: false,
+    start: new Date(year, month, startDay + 4, 14, 0),
+    end: new Date(year, month, startDay + 4, 14, 45),
   },
 ];
