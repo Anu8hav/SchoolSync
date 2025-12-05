@@ -2,6 +2,22 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import TeachersForm from "./forms/TeachersForm";
+import dynamic from "next/dynamic";
+import StudentsForm from "./forms/StudentForm";
+
+const forms: {
+  [key: string]: (type: "create" | "update", data?: any) => JSX.Element;
+} = {
+  teacher: (type, data) => <TeachersForm type={type} data={data} />,
+  student: (type, data) => <StudentsForm type={type} data={data} />,
+};
+const TeacherForm = dynamic(() => import("./forms/TeachersForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const StudentForm = dynamic(() => import("./forms/StudentForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 type FormModalProps = {
   table:
@@ -43,11 +59,12 @@ const FormModal = ({ table, type, data, id }: FormModalProps) => {
           Delete
         </button>
       </form>
+    ) : type === "create" || type === "update" ? (
+      forms[table](type, data)
     ) : (
-      "create or update"
+      "Form not found!"
     );
   };
-
   return (
     <>
       <button
