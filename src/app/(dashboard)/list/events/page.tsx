@@ -4,10 +4,9 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
-import { role } from "@/lib/data";
 import Image from "next/image";
-
 import { Prisma, Event, Class } from "@prisma/client"; // ✅ FIX
+import { currentUserId, role } from "@/lib/util";
 
 type EventList = Event & { class: Class | null };
 
@@ -25,7 +24,14 @@ const columns = [
     accessor: "endTime",
     className: "hidden md:table-cell",
   },
-  { header: "Actions", accessor: "action" },
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 const renderRow = (item: EventList) => {
@@ -87,6 +93,20 @@ const EventListPage = async ({
       }
     }
   }
+  // ROLE CONDITIONS
+
+  const roleConditions = {
+    teacher: { lessons: { some: { teacherId: currentUserId! } } },
+    student: { students: { some: { id: currentUserId! } } },
+    parent: { students: { some: { parentId: currentUserId! } } },
+  };
+
+  query.OR = [
+    { classId: null },
+    {
+      class: roleConditions[role as keyof typeof roleConditions] || {},
+    },
+  ];
 
   const [data, count] = await prisma.$transaction([
     prisma.event.findMany({

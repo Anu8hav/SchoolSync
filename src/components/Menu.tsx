@@ -1,4 +1,4 @@
-import { role } from "@/lib/data";
+import { currentUser } from "@clerk/nextjs/server";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -116,10 +116,15 @@ const menuItems = [
     ],
   },
 ];
+export const dynamic = "force-dynamic";
 
-const Menu = () => {
+const Menu = async () => {
+  const user = await currentUser();
+  console.log("Current User in Menu:", user);
+  const role = user?.publicMetadata.role as string;
   return (
     <div className="mt-4 text-sm">
+      <div className="text-xs text-red-500">Role: {role}</div>
       {menuItems.map((i) => (
         <div className="flex flex-col gap-2" key={i.title}>
           <span className="hidden lg:block text-gray-400 font-light my-4">
