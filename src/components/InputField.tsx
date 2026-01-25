@@ -6,11 +6,12 @@ type InputFieldProps = {
   type?: string;
   register: any;
   name: string;
-  defaultValue?: string;
-  error?: FieldError;
+  defaultValue?: string | number;
+  error?: FieldError | any;
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
   inputClassName?: string;
   wrapperClassName?: string;
+  hidden?: boolean;
 };
 
 const InputField = ({
@@ -23,7 +24,12 @@ const InputField = ({
   inputProps,
   inputClassName,
   wrapperClassName,
+  hidden,
 }: InputFieldProps) => {
+  if (hidden) {
+    return <input type={type} {...register(name)} defaultValue={defaultValue} hidden />;
+  }
+
   return (
     <div className={clsx("flex flex-col gap-2 w-full", wrapperClassName)}>
       <label className="text-xs text-gray-500">{label}</label>

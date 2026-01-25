@@ -19,9 +19,9 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body>
-          <header className="flex justify-end items-center p-4 gap-4 h-16">
+      <html lang="en" className="h-full overflow-hidden">
+        <body className="h-full overflow-hidden">
+          <header className="hidden">
             <SignedOut>
               <SignInButton />
               <SignUpButton>
@@ -31,7 +31,9 @@ export default function RootLayout({
               </SignUpButton>
             </SignedOut>
             <SignedIn>
-              <UserButton />
+              <div className="hidden">
+                <UserButton />
+              </div>
             </SignedIn>
           </header>
           {children}

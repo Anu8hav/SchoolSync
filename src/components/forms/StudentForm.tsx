@@ -5,6 +5,11 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import InputField from "../InputField";
 import Image from "next/image";
+import { Dispatch, SetStateAction, useEffect } from "react";
+import { useFormState } from "react-dom";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
+import { createStudent, updateStudent } from "@/lib/actions";
 
 const schema = z.object({
   username: z
@@ -37,9 +42,13 @@ type Inputs = z.infer<typeof schema>;
 const StudentsForm = ({
   type,
   data,
+  setOpen,
+  relatedData,
 }: {
   type: "create" | "update";
   data?: any;
+  setOpen: Dispatch<SetStateAction<boolean>>;
+  relatedData?: any;
 }) => {
   const {
     register,
@@ -49,10 +58,29 @@ const StudentsForm = ({
     resolver: zodResolver(schema),
   });
 
+  const [state, formAction] = useFormState(
+    type === "create" ? createStudent : updateStudent,
+    {
+      success: false,
+      error: false,
+    }
+  );
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state.success) {
+      toast(`Student has been ${type === "create" ? "created" : "updated"}!`);
+      setOpen(false);
+      router.refresh();
+    }
+  }, [state, router, type, setOpen]);
+
   const onSubmit = handleSubmit((values) => {
     // If you ever want Date later:
     // const birthdayAsDate = new Date(values.birthday);
     console.log(values);
+    formAction(values);
   });
 
   return (

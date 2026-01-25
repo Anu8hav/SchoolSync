@@ -32,7 +32,7 @@ const Navbar = async () => {
             {user?.publicMetadata?.role as string}
           </span>
         </div>
-        {/* <Image src="/avatar.png" alt="" width={36} height={36} className="rounded-full"/> */}
+        
         <UserButton />
       </div>
     </div>

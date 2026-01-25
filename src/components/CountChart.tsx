@@ -1,6 +1,4 @@
 "use client";
-
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   RadialBarChart,
@@ -8,19 +6,12 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+
 const CountChart = ({ boys, girls }: { boys: number; girls: number }) => {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
-
   const data = [
     {
       name: "Total",
-      count: boys + girls,
+      count: boys+girls,
       fill: "white",
     },
     {
@@ -34,28 +25,29 @@ const CountChart = ({ boys, girls }: { boys: number; girls: number }) => {
       fill: "#C3EBFA",
     },
   ];
-
   return (
-    <div className="relative w-full h-[75%]">
+   <div className="relative w-full h-[260px]">
       <ResponsiveContainer width="100%" height="100%">
         <RadialBarChart
           cx="50%"
           cy="50%"
-          innerRadius="40%"
-          outerRadius="100%"
-          barSize={32}
+          innerRadius="55%"
+          outerRadius="90%"
           data={data}
+          startAngle={90}
+          endAngle={-270}
         >
-          <RadialBar dataKey="count" />
+          <RadialBar dataKey="count" cornerRadius={50} background />
         </RadialBarChart>
       </ResponsiveContainer>
 
+      {/* center icon */}
       <Image
         src="/maleFemale.png"
         alt=""
-        width={50}
-        height={50}
-        className="absolute top-1/2 left-1/2 
+        width={42}
+        height={42}
+        className="absolute top-1/2 left-1/2
         -translate-x-1/2 -translate-y-1/2"
       />
     </div>

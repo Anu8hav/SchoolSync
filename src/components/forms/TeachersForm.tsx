@@ -4,6 +4,11 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import InputField from "../InputField";
 import Image from "next/image";
+import { Dispatch, SetStateAction, useEffect } from "react";
+import { useFormState } from "react-dom";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
+import { createTeacher, updateTeacher } from "@/lib/actions";
 
 const schema = z.object({
   username: z
@@ -19,9 +24,11 @@ const schema = z.object({
   phone: z.string().min(1, { message: "Phone is required!" }),
   address: z.string().min(1, { message: "Address is required!" }),
   bloodType: z.string().min(1, { message: "Blood Type is required!" }),
-  birthday: z.date({ message: "Birthday is required!" }),
+  birthday: z.string().min(1, { message: "Birthday is required!" }),
   sex: z.enum(["male", "female"], { message: "Sex is required!" }),
-  img: z.instanceof(File, { message: "Image is required" }),
+  img: z.custom<File>((val) => val instanceof File, {
+    message: "Image is required!",
+  }),
 });
 
 type Inputs = z.infer<typeof schema>;
@@ -29,9 +36,13 @@ type Inputs = z.infer<typeof schema>;
 const TeachersForm = ({
   type,
   data,
+  setOpen,
+  relatedData,
 }: {
   type: "create" | "update";
   data?: any;
+  setOpen: Dispatch<SetStateAction<boolean>>;
+  relatedData?: any;
 }) => {
   const {
     register,
@@ -41,8 +52,27 @@ const TeachersForm = ({
     resolver: zodResolver(schema),
   });
 
+  const [state, formAction] = useFormState(
+    type === "create" ? createTeacher : updateTeacher,
+    {
+      success: false,
+      error: false,
+    }
+  );
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state.success) {
+      toast(`Teacher has been ${type === "create" ? "created" : "updated"}!`);
+      setOpen(false);
+      router.refresh();
+    }
+  }, [state, router, type, setOpen]);
+
   const onSubmit = handleSubmit((data) => {
     console.log(data);
+    formAction(data);
   });
 
   return (
