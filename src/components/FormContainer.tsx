@@ -69,9 +69,96 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
         });
         relatedData = { lessons: examLessons };
         break;
+      case "assignment":
+        const assignmentLessons = await prisma.lesson.findMany({
+          where: {
+            ...(role === "teacher" ? { teacherId: currentUserId! } : {}),
+          },
+          select: { id: true, name: true },
+        });
+        relatedData = { lessons: assignmentLessons };
+        break;
 
       default:
         break;
+    }
+  }
+
+  if (type === "delete" && id) {
+    // provide counts of dependent rows so the UI can block unsafe deletes
+    switch (table) {
+      case "class": {
+        const studentCount = await prisma.student.count({
+          where: { classId: Number(id) },
+        });
+        const lessonCount = await prisma.lesson.count({
+          where: { classId: Number(id) },
+        });
+        const eventCount = await prisma.event.count({
+          where: { classId: Number(id) },
+        });
+        const announcementCount = await prisma.announcement.count({
+          where: { classId: Number(id) },
+        });
+        relatedData = {
+          counts: {
+            students: studentCount,
+            lessons: lessonCount,
+            events: eventCount,
+            announcements: announcementCount,
+          },
+        };
+        break;
+      }
+      case "teacher": {
+        const lessonCount = await prisma.lesson.count({
+          where: { teacherId: String(id) },
+        });
+        const classCount = await prisma.class.count({
+          where: { supervisorId: String(id) },
+        });
+        const subjectCount = await prisma.subject.count({
+          where: { teachers: { some: { id: String(id) } } },
+        });
+        relatedData = {
+          counts: {
+            lessons: lessonCount,
+            classes: classCount,
+            subjects: subjectCount,
+          },
+        };
+        break;
+      }
+      case "subject": {
+        const lessonCount = await prisma.lesson.count({
+          where: { subjectId: Number(id) },
+        });
+        relatedData = { counts: { lessons: lessonCount } };
+        break;
+      }
+      case "student": {
+        const resultCount = await prisma.result.count({
+          where: { studentId: String(id) },
+        });
+        const attendanceCount = await prisma.attendance.count({
+          where: { studentId: String(id) },
+        });
+        relatedData = {
+          counts: { results: resultCount, attendances: attendanceCount },
+        };
+        break;
+      }
+      case "parent": {
+        const studentCount = await prisma.student.count({
+          where: { parentId: String(id) },
+        });
+        relatedData = { counts: { students: studentCount } };
+        break;
+      }
+      default: {
+        relatedData = { counts: {} };
+        break;
+      }
     }
   }
 

@@ -8,7 +8,7 @@ import Navbar from "@/components/Navbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Lama Dev School Management Dashboard",
+  title: "ShoolSync",
   description: "Next.js School Management System",
 };
 
@@ -25,7 +25,7 @@ export default function RootLayout({
           <Image src="/logo.png" alt="logo" width={32} height={32} />
           {/* 👇 Only visible on large screens */}
           <span className="hidden lg:inline font-semibold text-lg">
-            MySchool
+            SchoolSync
           </span>
         </Link>
         <Menu />

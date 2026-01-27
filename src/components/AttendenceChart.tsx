@@ -32,7 +32,7 @@ const AttendenceChart = ({
             axisLine={false}
             tick={{ fill: "#d1d5db" }}
             tickLine={false}
-            domain={[0, 'auto']}
+            domain={[0, "auto"]}
             allowDecimals={false}
           />
           <Tooltip

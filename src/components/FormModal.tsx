@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -7,14 +6,16 @@ import {
   deleteStudent,
   deleteSubject,
   deleteTeacher,
+  deleteAssignment,
 } from "@/lib/actions";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Dispatch, SetStateAction, useEffect, useState, ReactNode } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useFormState } from "react-dom";
 import { toast } from "react-toastify";
 import { FormContainerProps } from "./FormContainer";
+import type { JSX } from "react";
 
 const deleteActionMap = {
   subject: deleteSubject,
@@ -22,10 +23,10 @@ const deleteActionMap = {
   teacher: deleteTeacher,
   student: deleteStudent,
   exam: deleteExam,
-// TODO: OTHER DELETE ACTIONS
+  // TODO: OTHER DELETE ACTIONS
   parent: deleteSubject,
   lesson: deleteSubject,
-  assignment: deleteSubject,
+  assignment: deleteAssignment,
   result: deleteSubject,
   attendance: deleteSubject,
   event: deleteSubject,
@@ -52,7 +53,7 @@ const ClassForm = dynamic(() => import("./forms/ClassForm"), {
 const ExamForm = dynamic(() => import("./forms/ExamForm"), {
   loading: () => <h1>Loading...</h1>,
 });
-const LessonForm = dynamic(() => import("./forms/LessonForm"), {
+const AssignmentForm = dynamic(() => import("./forms/AssignmentForm"), {
   loading: () => <h1>Loading...</h1>,
 });
 // TODO: OTHER FORMS
@@ -62,8 +63,8 @@ const forms: {
     setOpen: Dispatch<SetStateAction<boolean>>,
     type: "create" | "update",
     data?: any,
-    relatedData?: any
-  ) => ReactNode;
+    relatedData?: any,
+  ) => JSX.Element;
 } = {
   subject: (setOpen, type, data, relatedData) => (
     <SubjectForm
@@ -104,22 +105,16 @@ const forms: {
       setOpen={setOpen}
       relatedData={relatedData}
     />
+    // TODO OTHER LIST ITEMS
   ),
-  lesson: (setOpen, type, data, relatedData) => (
-    <LessonForm
+  assignment: (setOpen, type, data, relatedData) => (
+    <AssignmentForm
       type={type}
       data={data}
       setOpen={setOpen}
       relatedData={relatedData}
     />
   ),
-  // Placeholder forms for future implementation
-  parent: () => <div className="p-4"><p>Parent form - Coming soon</p></div>,
-  assignment: () => <div className="p-4"><p>Assignment form - Coming soon</p></div>,
-  result: () => <div className="p-4"><p>Result form - Coming soon</p></div>,
-  attendance: () => <div className="p-4"><p>Attendance form - Coming soon</p></div>,
-  event: () => <div className="p-4"><p>Event form - Coming soon</p></div>,
-  announcement: () => <div className="p-4"><p>Announcement form - Coming soon</p></div>,
 };
 
 const FormModal = ({
@@ -134,8 +129,8 @@ const FormModal = ({
     type === "create"
       ? "bg-lamaYellow"
       : type === "update"
-      ? "bg-lamaSky"
-      : "bg-lamaPurple";
+        ? "bg-lamaSky"
+        : "bg-lamaPurple";
 
   const [open, setOpen] = useState(false);
 
@@ -157,16 +152,51 @@ const FormModal = ({
 
     return type === "delete" && id ? (
       <form action={formAction} className="p-4 flex flex-col gap-4">
-        <input type="text | number" name="id" value={id} hidden />
+        <input type="hidden" name="id" defaultValue={String(id)} />
+        {relatedData?.counts && Object.keys(relatedData.counts).length > 0 && (
+          <div className="flex flex-col gap-2">
+            <h2 className="font-semibold">Blocking records</h2>
+            <ul className="text-sm text-gray-600">
+              {Object.entries(relatedData.counts).map(([key, val]) => (
+                <li key={key}>
+                  {key}: {String(val)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <span className="text-center font-medium">
           All data will be lost. Are you sure you want to delete this {table}?
         </span>
-        <button className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center">
-          Delete
-        </button>
+        {relatedData?.counts &&
+        Object.values(relatedData.counts).some((v: any) => v > 0) ? (
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-sm text-red-600">
+              Cannot delete while dependent records exist. Please reassign or
+              remove them first.
+            </p>
+            <button
+              disabled
+              className="bg-red-300 text-white py-2 px-4 rounded-md border-none w-max self-center cursor-not-allowed"
+            >
+              Delete
+            </button>
+          </div>
+        ) : (
+          <button
+            type="submit"
+            className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center"
+          >
+            Delete
+          </button>
+        )}
       </form>
     ) : type === "create" || type === "update" ? (
-      forms[table](setOpen, type, data, relatedData)
+      typeof forms[table] === "function" ? (
+        forms[table](setOpen, type, data, relatedData)
+      ) : (
+        <div className="p-4">Form not found for {table}.</div>
+      )
     ) : (
       "Form not found!"
     );

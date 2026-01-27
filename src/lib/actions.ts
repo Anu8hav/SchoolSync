@@ -15,7 +15,7 @@ type CurrentState = { success: boolean; error: boolean };
 
 export const createSubject = async (
   currentState: CurrentState,
-  data: SubjectSchema
+  data: SubjectSchema,
 ) => {
   try {
     await prisma.subject.create({
@@ -37,7 +37,7 @@ export const createSubject = async (
 
 export const updateSubject = async (
   currentState: CurrentState,
-  data: SubjectSchema
+  data: SubjectSchema,
 ) => {
   try {
     await prisma.subject.update({
@@ -62,7 +62,7 @@ export const updateSubject = async (
 
 export const deleteSubject = async (
   currentState: CurrentState,
-  data: FormData
+  data: FormData,
 ) => {
   const id = data.get("id") as string;
   try {
@@ -82,7 +82,7 @@ export const deleteSubject = async (
 
 export const createClass = async (
   currentState: CurrentState,
-  data: ClassSchema
+  data: ClassSchema,
 ) => {
   try {
     await prisma.class.create({
@@ -99,7 +99,7 @@ export const createClass = async (
 
 export const updateClass = async (
   currentState: CurrentState,
-  data: ClassSchema
+  data: ClassSchema,
 ) => {
   try {
     await prisma.class.update({
@@ -119,35 +119,66 @@ export const updateClass = async (
 
 export const deleteClass = async (
   currentState: CurrentState,
-  data: FormData
+  data: FormData | { id?: string } | any,
 ) => {
-  const id = data.get("id") as string;
+  // Accept either FormData (when submitted from a <form>)
+  // or a plain object { id } (when invoked programmatically)
+  let idStr: string | undefined | null = undefined;
+  try {
+    if (data && typeof data.get === "function") {
+      idStr = (data as FormData).get("id") as string | null;
+    } else if (data && typeof data.id !== "undefined") {
+      idStr = String(data.id);
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  if (!idStr) {
+    console.error("deleteClass: missing id", data);
+    return { success: false, error: true, message: "Missing class id" };
+  }
+
+  const parsedId = parseInt(idStr as string, 10);
+  if (isNaN(parsedId)) {
+    console.error("deleteClass: invalid id", idStr);
+    return { success: false, error: true, message: "Invalid class id" };
+  }
+
   try {
     await prisma.class.delete({
       where: {
-        id: parseInt(id),
+        id: parsedId,
       },
     });
 
-    // revalidatePath("/list/class");
+    revalidatePath("/list/classes");
     return { success: true, error: false };
   } catch (err) {
-    console.log(err);
-    return { success: false, error: true };
+    console.error("Error deleting class:", err);
+    // Extract DB detail if available
+    // @ts-ignore
+    const detail = err?.cause?.detail || (err && err.message) || "";
+    return {
+      success: false,
+      error: true,
+      message: `Unable to delete class. ${detail}`,
+    };
   }
 };
 
 export const createTeacher = async (
   currentState: CurrentState,
-  data: TeacherSchema
+  data: TeacherSchema,
 ) => {
   try {
-    const user = await clerkClient.users.createUser({
+    const client = await clerkClient();
+    const user = await client.users.createUser({
       username: data.username,
       password: data.password,
       firstName: data.name,
       lastName: data.surname,
-      publicMetadata:{role:"teacher"}
+      publicMetadata: { role: "teacher" },
     });
 
     await prisma.teacher.create({
@@ -181,13 +212,14 @@ export const createTeacher = async (
 
 export const updateTeacher = async (
   currentState: CurrentState,
-  data: TeacherSchema
+  data: TeacherSchema,
 ) => {
   if (!data.id) {
     return { success: false, error: true };
   }
   try {
-    const user = await clerkClient.users.updateUser(data.id, {
+    const client = await clerkClient();
+    const user = await client.users.updateUser(data.id, {
       username: data.username,
       ...(data.password !== "" && { password: data.password }),
       firstName: data.name,
@@ -227,11 +259,12 @@ export const updateTeacher = async (
 
 export const deleteTeacher = async (
   currentState: CurrentState,
-  data: FormData
+  data: FormData,
 ) => {
   const id = data.get("id") as string;
   try {
-    await clerkClient.users.deleteUser(id);
+    const client = await clerkClient();
+    await client.users.deleteUser(id);
 
     await prisma.teacher.delete({
       where: {
@@ -249,7 +282,7 @@ export const deleteTeacher = async (
 
 export const createStudent = async (
   currentState: CurrentState,
-  data: StudentSchema
+  data: StudentSchema,
 ) => {
   console.log(data);
   try {
@@ -262,12 +295,13 @@ export const createStudent = async (
       return { success: false, error: true };
     }
 
-    const user = await clerkClient.users.createUser({
+    const client = await clerkClient();
+    const user = await client.users.createUser({
       username: data.username,
       password: data.password,
       firstName: data.name,
       lastName: data.surname,
-      publicMetadata:{role:"student"}
+      publicMetadata: { role: "student" },
     });
 
     await prisma.student.create({
@@ -299,13 +333,14 @@ export const createStudent = async (
 
 export const updateStudent = async (
   currentState: CurrentState,
-  data: StudentSchema
+  data: StudentSchema,
 ) => {
   if (!data.id) {
     return { success: false, error: true };
   }
   try {
-    const user = await clerkClient.users.updateUser(data.id, {
+    const client = await clerkClient();
+    const user = await client.users.updateUser(data.id, {
       username: data.username,
       ...(data.password !== "" && { password: data.password }),
       firstName: data.name,
@@ -343,11 +378,12 @@ export const updateStudent = async (
 
 export const deleteStudent = async (
   currentState: CurrentState,
-  data: FormData
+  data: FormData,
 ) => {
   const id = data.get("id") as string;
   try {
-    await clerkClient.users.deleteUser(id);
+    const client = await clerkClient();
+    await client.users.deleteUser(id);
 
     await prisma.student.delete({
       where: {
@@ -365,7 +401,7 @@ export const deleteStudent = async (
 
 export const createExam = async (
   currentState: CurrentState,
-  data: ExamSchema
+  data: ExamSchema,
 ) => {
   // const { userId, sessionClaims } = auth();
   // const role = (sessionClaims?.metadata as { role?: string })?.role;
@@ -403,7 +439,7 @@ export const createExam = async (
 
 export const updateExam = async (
   currentState: CurrentState,
-  data: ExamSchema
+  data: ExamSchema,
 ) => {
   // const { userId, sessionClaims } = auth();
   // const role = (sessionClaims?.metadata as { role?: string })?.role;
@@ -442,9 +478,82 @@ export const updateExam = async (
   }
 };
 
+export const createAssignment = async (
+  currentState: CurrentState,
+  data: any,
+) => {
+  try {
+    await prisma.assignment.create({
+      data: {
+        title: data.title,
+        startDate: data.startDate,
+        dueDate: data.dueDate,
+        lesson: { connect: { id: data.lessonId } },
+      },
+    });
+
+    revalidatePath("/list/assignments");
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+};
+
+export const updateAssignment = async (
+  currentState: CurrentState,
+  data: any,
+) => {
+  try {
+    await prisma.assignment.update({
+      where: { id: data.id },
+      data: {
+        title: data.title,
+        startDate: data.startDate,
+        dueDate: data.dueDate,
+        lessonId: data.lessonId,
+      },
+    });
+
+    revalidatePath("/list/assignments");
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+};
+
+export const deleteAssignment = async (
+  currentState: CurrentState,
+  data: FormData | { id?: string } | any,
+) => {
+  let idStr: string | undefined | null = undefined;
+  try {
+    if (data && typeof data.get === "function") {
+      idStr = (data as FormData).get("id") as string | null;
+    } else if (data && typeof data.id !== "undefined") {
+      idStr = String(data.id);
+    }
+  } catch (e) {}
+
+  if (!idStr) return { success: false, error: true };
+
+  const parsedId = parseInt(idStr as string, 10);
+  if (isNaN(parsedId)) return { success: false, error: true };
+
+  try {
+    await prisma.assignment.delete({ where: { id: parsedId } });
+    revalidatePath("/list/assignments");
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+};
+
 export const deleteExam = async (
   currentState: CurrentState,
-  data: FormData
+  data: FormData,
 ) => {
   const id = data.get("id") as string;
 

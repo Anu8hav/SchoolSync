@@ -16,7 +16,7 @@ const Navbar = async () => {
             {user?.publicMetadata?.role as string}
           </span>
         </div>
-        
+
         <UserButton />
       </div>
     </div>
