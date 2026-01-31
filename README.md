@@ -349,7 +349,7 @@ This project is open source and available under the MIT License.
 
 ## 👤 Author
 
-**Anu Bhav**  
+**Anu8hav**  
 GitHub: [@Anu8hav](https://github.com/Anu8hav)
 
 ---
