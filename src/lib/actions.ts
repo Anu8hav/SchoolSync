@@ -72,7 +72,7 @@ export const deleteSubject = async (
       },
     });
 
-    // revalidatePath("/list/subjects");
+    revalidatePath("/list/subjects");
     return { success: true, error: false };
   } catch (err) {
     console.log(err);
@@ -169,40 +169,57 @@ export const deleteClass = async (
 
 export const createTeacher = async (
   currentState: CurrentState,
-  data: TeacherSchema,
+  formData: FormData,
 ) => {
   try {
+    const username = formData.get("username") as string;
+    const password = formData.get("password") as string;
+    const email = formData.get("email") as string;
+    const firstName = formData.get("firstName") as string;
+    const lastName = formData.get("lastName") as string;
+    const phone = formData.get("phone") as string;
+    const address = formData.get("address") as string;
+    const bloodType = formData.get("bloodType") as string;
+    const sex = formData.get("sex") as string;
+    const birthday = formData.get("birthday") as string;
+
     const client = await clerkClient();
-    const user = await client.users.createUser({
-      username: data.username,
-      password: data.password,
-      firstName: data.name,
-      lastName: data.surname,
-      publicMetadata: { role: "teacher" },
-    });
+    let user;
+    try {
+      user = await client.users.createUser({
+        username,
+        password,
+        firstName,
+        lastName,
+        publicMetadata: { role: "teacher" },
+      });
+    } catch (clerkErr: any) {
+      const errorMsg =
+        clerkErr?.errors?.[0]?.message || "Failed to create user";
+      console.log("Clerk error:", errorMsg);
+      return { success: false, error: true, message: errorMsg };
+    }
 
     await prisma.teacher.create({
       data: {
         id: user.id,
-        username: data.username,
-        name: data.name,
-        surname: data.surname,
-        email: data.email || null,
-        phone: data.phone || null,
-        address: data.address,
-        img: data.img || null,
-        bloodType: data.bloodType,
-        sex: data.sex,
-        birthday: data.birthday,
+        username,
+        name: firstName,
+        surname: lastName,
+        email: email || null,
+        phone: phone || null,
+        address,
+        img: null,
+        bloodType,
+        sex: sex.toUpperCase() as any,
+        birthday: new Date(birthday),
         subjects: {
-          connect: data.subjects?.map((subjectId: string) => ({
-            id: parseInt(subjectId),
-          })),
+          connect: [],
         },
       },
     });
 
-    // revalidatePath("/list/teachers");
+    revalidatePath("/list/teachers");
     return { success: true, error: false };
   } catch (err) {
     console.log(err);
@@ -212,44 +229,62 @@ export const createTeacher = async (
 
 export const updateTeacher = async (
   currentState: CurrentState,
-  data: TeacherSchema,
+  formData: FormData,
 ) => {
-  if (!data.id) {
-    return { success: false, error: true };
-  }
   try {
+    const id = formData.get("id") as string;
+    const username = formData.get("username") as string;
+    const password = formData.get("password") as string;
+    const email = formData.get("email") as string;
+    const firstName = formData.get("firstName") as string;
+    const lastName = formData.get("lastName") as string;
+    const phone = formData.get("phone") as string;
+    const address = formData.get("address") as string;
+    const bloodType = formData.get("bloodType") as string;
+    const sex = formData.get("sex") as string;
+    const birthday = formData.get("birthday") as string;
+
+    if (!id) {
+      return { success: false, error: true };
+    }
+
     const client = await clerkClient();
-    const user = await client.users.updateUser(data.id, {
-      username: data.username,
-      ...(data.password !== "" && { password: data.password }),
-      firstName: data.name,
-      lastName: data.surname,
-    });
+    const updateData: any = {
+      username,
+      firstName,
+      lastName,
+    };
+    if (password && password !== "") {
+      updateData.password = password;
+    }
+
+    try {
+      await client.users.updateUser(id, updateData);
+    } catch (clerkErr: any) {
+      // Ignore not found errors
+      if (clerkErr?.errors?.[0]?.code !== "resource_not_found") {
+        throw clerkErr;
+      }
+    }
 
     await prisma.teacher.update({
       where: {
-        id: data.id,
+        id,
       },
       data: {
-        ...(data.password !== "" && { password: data.password }),
-        username: data.username,
-        name: data.name,
-        surname: data.surname,
-        email: data.email || null,
-        phone: data.phone || null,
-        address: data.address,
-        img: data.img || null,
-        bloodType: data.bloodType,
-        sex: data.sex,
-        birthday: data.birthday,
-        subjects: {
-          set: data.subjects?.map((subjectId: string) => ({
-            id: parseInt(subjectId),
-          })),
-        },
+        username,
+        name: firstName,
+        surname: lastName,
+        email: email || null,
+        phone: phone || null,
+        address,
+        bloodType,
+        sex: sex.toUpperCase() as any,
+        birthday: new Date(birthday),
       },
     });
-    // revalidatePath("/list/teachers");
+
+    revalidatePath("/list/teachers");
     return { success: true, error: false };
   } catch (err) {
     console.log(err);
@@ -264,7 +299,14 @@ export const deleteTeacher = async (
   const id = data.get("id") as string;
   try {
     const client = await clerkClient();
-    await client.users.deleteUser(id);
+    try {
+      await client.users.deleteUser(id);
+    } catch (clerkErr: any) {
+      // Ignore if user not found in Clerk, just delete from DB
+      if (clerkErr?.errors?.[0]?.code !== "resource_not_found") {
+        throw clerkErr;
+      }
+    }
 
     await prisma.teacher.delete({
       where: {
@@ -272,7 +314,7 @@ export const deleteTeacher = async (
       },
     });
 
-    // revalidatePath("/list/teachers");
+    revalidatePath("/list/teachers");
     return { success: true, error: false };
   } catch (err) {
     console.log(err);
@@ -383,7 +425,14 @@ export const deleteStudent = async (
   const id = data.get("id") as string;
   try {
     const client = await clerkClient();
-    await client.users.deleteUser(id);
+    try {
+      await client.users.deleteUser(id);
+    } catch (clerkErr: any) {
+      // Ignore if user not found in Clerk, just delete from DB
+      if (clerkErr?.errors?.[0]?.code !== "resource_not_found") {
+        throw clerkErr;
+      }
+    }
 
     await prisma.student.delete({
       where: {
@@ -391,7 +440,7 @@ export const deleteStudent = async (
       },
     });
 
-    // revalidatePath("/list/students");
+    revalidatePath("/list/students");
     return { success: true, error: false };
   } catch (err) {
     console.log(err);
@@ -568,7 +617,7 @@ export const deleteExam = async (
       },
     });
 
-    // revalidatePath("/list/subjects");
+    revalidatePath("/list/exams");
     return { success: true, error: false };
   } catch (err) {
     console.log(err);

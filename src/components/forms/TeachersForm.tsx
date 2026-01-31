@@ -26,9 +26,6 @@ const schema = z.object({
   bloodType: z.string().min(1, { message: "Blood Type is required!" }),
   birthday: z.string().min(1, { message: "Birthday is required!" }),
   sex: z.enum(["male", "female"], { message: "Sex is required!" }),
-  img: z.custom<File>((val) => val instanceof File, {
-    message: "Image is required!",
-  }),
 });
 
 type Inputs = z.infer<typeof schema>;
@@ -57,7 +54,7 @@ const TeachersForm = ({
     {
       success: false,
       error: false,
-    }
+    },
   );
 
   const router = useRouter();
@@ -68,15 +65,14 @@ const TeachersForm = ({
       setOpen(false);
       router.refresh();
     }
+    if (state.error) {
+      const message = (state as any)?.message || "An error occurred";
+      toast.error(message);
+    }
   }, [state, router, type, setOpen]);
 
-  const onSubmit = handleSubmit((data) => {
-    console.log(data);
-    formAction(data);
-  });
-
   return (
-    <form className="flex flex-col gap-8" onSubmit={onSubmit}>
+    <form className="flex flex-col gap-8" action={formAction}>
       <h1 className="text-xl font-semibold">Create a new teacher</h1>
 
       <span className="text-xs text-gray-400 font-medium">
@@ -174,23 +170,6 @@ const TeachersForm = ({
           {errors.sex?.message && (
             <p className="text-xs text-red-400">
               {errors.sex.message.toString()}
-            </p>
-          )}
-        </div>
-
-        {/* Image upload */}
-        <div className="flex flex-col gap-2 justify-center">
-          <label
-            className="text-xs text-gray-500 flex items-center gap-2 cursor-pointer"
-            htmlFor="img"
-          >
-            <Image src="/upload.png" alt="" width={28} height={28} />
-            <span>Upload a photo</span>
-          </label>
-          <input type="file" id="img" {...register("img")} className="hidden" />
-          {errors.img?.message && (
-            <p className="text-xs text-red-400">
-              {errors.img.message.toString()}
             </p>
           )}
         </div>

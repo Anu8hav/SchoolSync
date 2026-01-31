@@ -153,43 +153,15 @@ const FormModal = ({
     return type === "delete" && id ? (
       <form action={formAction} className="p-4 flex flex-col gap-4">
         <input type="hidden" name="id" defaultValue={String(id)} />
-        {relatedData?.counts && Object.keys(relatedData.counts).length > 0 && (
-          <div className="flex flex-col gap-2">
-            <h2 className="font-semibold">Blocking records</h2>
-            <ul className="text-sm text-gray-600">
-              {Object.entries(relatedData.counts).map(([key, val]) => (
-                <li key={key}>
-                  {key}: {String(val)}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
         <span className="text-center font-medium">
-          All data will be lost. Are you sure you want to delete this {table}?
+          Are you sure you want to delete this {table}?
         </span>
-        {relatedData?.counts &&
-        Object.values(relatedData.counts).some((v: any) => v > 0) ? (
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-sm text-red-600">
-              Cannot delete while dependent records exist. Please reassign or
-              remove them first.
-            </p>
-            <button
-              disabled
-              className="bg-red-300 text-white py-2 px-4 rounded-md border-none w-max self-center cursor-not-allowed"
-            >
-              Delete
-            </button>
-          </div>
-        ) : (
-          <button
-            type="submit"
-            className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center"
-          >
-            Delete
-          </button>
-        )}
+        <button
+          type="submit"
+          className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center"
+        >
+          Delete
+        </button>
       </form>
     ) : type === "create" || type === "update" ? (
       typeof forms[table] === "function" ? (

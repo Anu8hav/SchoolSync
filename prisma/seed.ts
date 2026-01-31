@@ -8,33 +8,30 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  // ADMIN
-  await prisma.admin.create({
-    data: {
-      id: "admin1",
-      username: "admin1",
-    },
-  });
-  await prisma.admin.create({
-    data: {
-      id: "admin2",
-      username: "admin2",
-    },
+  const now = new Date();
+
+  // 1. ADMIN
+  await prisma.admin.upsert({
+    where: { username: "admin1" },
+    update: {},
+    create: { id: "admin1", username: "admin1" },
   });
 
-  // GRADE
+  // 2. GRADE
   for (let i = 1; i <= 6; i++) {
-    await prisma.grade.create({
-      data: {
-        level: i,
-      },
+    await prisma.grade.upsert({
+      where: { level: i },
+      update: {},
+      create: { level: i },
     });
   }
 
-  // CLASS
+  // 3. CLASS
   for (let i = 1; i <= 6; i++) {
-    await prisma.class.create({
-      data: {
+    await prisma.class.upsert({
+      where: { name: `${i}A` },
+      update: {},
+      create: {
         name: `${i}A`,
         gradeId: i,
         capacity: Math.floor(Math.random() * (20 - 15 + 1)) + 15,
@@ -42,29 +39,31 @@ async function main() {
     });
   }
 
-  // SUBJECT
-  const subjectData = [
-    { name: "Mathematics" },
-    { name: "Science" },
-    { name: "English" },
-    { name: "History" },
-    { name: "Geography" },
-    { name: "Physics" },
-    { name: "Chemistry" },
-    { name: "Biology" },
-    { name: "Computer Science" },
-    { name: "Art" },
+  // 4. SUBJECT
+  const subjects = [
+    "Math",
+    "Science",
+    "English",
+    "History",
+    "Physics",
+    "Chemistry",
+    "Art",
   ];
-
-  for (const subject of subjectData) {
-    await prisma.subject.create({ data: subject });
+  for (const name of subjects) {
+    await prisma.subject.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
   }
 
-  // TEACHER
+  // 5. TEACHER
   for (let i = 1; i <= 15; i++) {
-    await prisma.teacher.create({
-      data: {
-        id: `teacher${i}`, // Unique ID for the teacher
+    await prisma.teacher.upsert({
+      where: { id: `teacher${i}` },
+      update: {},
+      create: {
+        id: `teacher${i}`,
         username: `teacher${i}`,
         name: `TName${i}`,
         surname: `TSurname${i}`,
@@ -73,153 +72,184 @@ async function main() {
         address: `Address${i}`,
         bloodType: "A+",
         sex: i % 2 === 0 ? UserSex.MALE : UserSex.FEMALE,
-        subjects: { connect: [{ id: (i % 10) + 1 }] },
-        classes: { connect: [{ id: (i % 6) + 1 }] },
         birthday: new Date(
-          new Date().setFullYear(new Date().getFullYear() - 30)
+          now.getFullYear() - 35,
+          now.getMonth(),
+          now.getDate(),
         ),
       },
     });
   }
 
-  // LESSON
+  // 6. LESSON (Today's schedule)
   for (let i = 1; i <= 30; i++) {
+    const start = new Date(now);
+    start.setHours(9 + (i % 6), 0, 0); // Staggered start times from 9 AM
+    const end = new Date(start);
+    end.setHours(start.getHours() + 1);
+
     await prisma.lesson.create({
       data: {
-        name: `Lesson${i}`,
-        day: Day[
-          Object.keys(Day)[
-            Math.floor(Math.random() * Object.keys(Day).length)
-          ] as keyof typeof Day
-        ],
-        startTime: new Date(new Date().setHours(new Date().getHours() + 1)),
-        endTime: new Date(new Date().setHours(new Date().getHours() + 3)),
-        subjectId: (i % 10) + 1,
+        name: `Lesson ${i}`,
+        day: Object.values(Day)[now.getDay() - 1] || Day.MONDAY,
+        startTime: start,
+        endTime: end,
+        subjectId: (i % 7) + 1,
         classId: (i % 6) + 1,
         teacherId: `teacher${(i % 15) + 1}`,
       },
     });
   }
 
-  // PARENT
+  // 7. PARENT & STUDENT
   for (let i = 1; i <= 25; i++) {
-    await prisma.parent.create({
-      data: {
+    const parent = await prisma.parent.upsert({
+      where: { id: `parentId${i}` },
+      update: {},
+      create: {
         id: `parentId${i}`,
-        username: `parentId${i}`,
-        name: `PName ${i}`,
-        surname: `PSurname ${i}`,
-        email: `parent${i}@example.com`,
-        phone: `123-456-789${i}`,
+        username: `parent${i}`,
+        name: `PName${i}`,
+        surname: `PSurname${i}`,
+        phone: `123-456-70${i}`,
         address: `Address${i}`,
       },
     });
+
+    // Create 2 students per parent
+    for (let j = 1; j <= 2; j++) {
+      const sId = (i - 1) * 2 + j;
+      await prisma.student.upsert({
+        where: { id: `student${sId}` },
+        update: {},
+        create: {
+          id: `student${sId}`,
+          username: `student${sId}`,
+          name: `SName${sId}`,
+          surname: `SSurname${sId}`,
+          bloodType: "O-",
+          sex: sId % 2 === 0 ? UserSex.MALE : UserSex.FEMALE,
+          parentId: parent.id,
+          gradeId: sId % 6 || 6,
+          classId: sId % 6 || 6,
+          address: `Address${sId}`,
+          birthday: new Date(
+            now.getFullYear() - 12,
+            now.getMonth(),
+            now.getDate(),
+          ),
+        },
+      });
+    }
   }
 
-  // STUDENT
-  for (let i = 1; i <= 50; i++) {
-    await prisma.student.create({
-      data: {
-        id: `student${i}`,
-        username: `student${i}`,
-        name: `SName${i}`,
-        surname: `SSurname ${i}`,
-        email: `student${i}@example.com`,
-        phone: `987-654-321${i}`,
-        address: `Address${i}`,
-        bloodType: "O-",
-        sex: i % 2 === 0 ? UserSex.MALE : UserSex.FEMALE,
-        parentId: `parentId${Math.ceil(i / 2) % 25 || 25}`,
-        gradeId: (i % 6) + 1,
-        classId: (i % 6) + 1,
-        birthday: new Date(
-          new Date().setFullYear(new Date().getFullYear() - 10)
-        ),
-      },
-    });
-  }
-
-  // EXAM
+  // 8. EXAMS & ASSIGNMENTS (Set for today/tomorrow)
   for (let i = 1; i <= 10; i++) {
     await prisma.exam.create({
       data: {
         title: `Exam ${i}`,
-        startTime: new Date(new Date().setHours(new Date().getHours() + 1)),
-        endTime: new Date(new Date().setHours(new Date().getHours() + 2)),
-        lessonId: (i % 30) + 1,
+        startTime: new Date(now.getTime() + 1000 * 60 * 60), // In 1 hour
+        endTime: new Date(now.getTime() + 1000 * 60 * 120), // In 2 hours
+        lessonId: i,
       },
     });
-  }
 
-  // ASSIGNMENT
-  for (let i = 1; i <= 10; i++) {
     await prisma.assignment.create({
       data: {
         title: `Assignment ${i}`,
-        startDate: new Date(new Date().setHours(new Date().getHours() + 1)),
-        dueDate: new Date(new Date().setDate(new Date().getDate() + 1)),
-        lessonId: (i % 30) + 1,
+        startDate: now,
+        dueDate: new Date(now.getTime() + 1000 * 60 * 60 * 24 * 7), // 7 days from now
+        lessonId: i,
       },
     });
   }
 
-  // RESULT
-  for (let i = 1; i <= 10; i++) {
-    await prisma.result.create({
-      data: {
-        score: 90,
-        studentId: `student${i}`,
-        ...(i <= 5 ? { examId: i } : { assignmentId: i - 5 }),
-      },
-    });
-  }
-
-  // ATTENDANCE
-  for (let i = 1; i <= 10; i++) {
-    await prisma.attendance.create({
-      data: {
-        date: new Date(),
-        present: true,
-        studentId: `student${i}`,
-        lessonId: (i % 30) + 1,
-      },
-    });
-  }
-
-  // EVENT
+  // 9. EVENT & ANNOUNCEMENT
   for (let i = 1; i <= 5; i++) {
     await prisma.event.create({
       data: {
         title: `Event ${i}`,
-        description: `Description for Event ${i}`,
-        startTime: new Date(new Date().setHours(new Date().getHours() + 1)),
-        endTime: new Date(new Date().setHours(new Date().getHours() + 2)),
-        classId: (i % 5) + 1,
+        description: `Happening today!`,
+        startTime: now,
+        endTime: new Date(now.getTime() + 1000 * 60 * 60 * 3),
+        classId: i,
       },
     });
-  }
 
-  // ANNOUNCEMENT
-  for (let i = 1; i <= 5; i++) {
     await prisma.announcement.create({
       data: {
-        title: `Announcement ${i}`,
-        description: `Description for Announcement ${i}`,
-        date: new Date(),
-        classId: (i % 5) + 1,
+        title: `Notice ${i}`,
+        description: `Please check the new schedule.`,
+        date: now,
+        classId: i,
       },
     });
   }
 
-  console.log("Seeding completed successfully.");
+  // 10. ATTENDANCE DATA (Last 7 days, relevant to current time)
+  const lessons = await prisma.lesson.findMany({ take: 6 }); // Only 6 lessons per day
+  const students = await prisma.student.findMany({ take: 50 });
+
+  for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+    const attendanceDate = new Date(now);
+    attendanceDate.setDate(attendanceDate.getDate() - dayOffset);
+
+    // Create attendance for each student in each lesson on this day
+    for (const lesson of lessons) {
+      for (const student of students) {
+        const isPresent = Math.random() > 0.15; // 85% attendance rate
+        await prisma.attendance.create({
+          data: {
+            date: attendanceDate,
+            present: isPresent,
+            studentId: student.id,
+            lessonId: lesson.id,
+          },
+        });
+      }
+    }
+  }
+
+  // Quick count: 7 days × 6 lessons × 50 students = 2,100 records (more reasonable)
+
+  // 11. RESULTS DATA (Exams and assignments with scores)
+  const exams = await prisma.exam.findMany();
+  const assignments = await prisma.assignment.findMany();
+
+  // Results for exams
+  for (const exam of exams) {
+    for (const student of students.slice(0, 20)) {
+      await prisma.result.create({
+        data: {
+          score: Math.floor(Math.random() * 101),
+          examId: exam.id,
+          studentId: student.id,
+        },
+      });
+    }
+  }
+
+  // Results for assignments
+  for (const assignment of assignments) {
+    for (const student of students.slice(0, 20)) {
+      await prisma.result.create({
+        data: {
+          score: Math.floor(Math.random() * 101),
+          assignmentId: assignment.id,
+          studentId: student.id,
+        },
+      });
+    }
+  }
+
+  console.log("Seeding completed successfully with fresh dates.");
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
+  .catch((e) => {
     console.error(e);
-    await prisma.$disconnect();
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });
